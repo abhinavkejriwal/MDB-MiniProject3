@@ -27,12 +27,12 @@ public class EventLogistics extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FloatingActionButton createEvent;
     private FirebaseDatabase database;
-    private RecyclerView recyclerView;
+/*    private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerView.Adapter mAdapter;
     private ArrayList<Event> eventsList;
     private EventsAdapter eventsAdapter;
-    private String userID;
+    private String userID;*/
     private DatabaseReference refEvents;
     private Query events;
     private ImageView imageView;
@@ -47,7 +47,7 @@ public class EventLogistics extends AppCompatActivity {
     private String imageURL;
     private String numberAttending;
     private boolean attending;
-    private ArrayList<String> eventsAttending = new ArrayList<>();
+    private ArrayList<String> thoseAttendingEvents = new ArrayList<>();
     DatabaseReference rsvp;
     private boolean check;
 
@@ -57,21 +57,22 @@ public class EventLogistics extends AppCompatActivity {
         setContentView(R.layout.activity_event_logistics);
         Bundle b = getIntent().getExtras();
         final String id = b.getString("EventID");
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
         database.setPersistenceEnabled(true);
-        rsvp = database.getReference().child("rsvp").child(mAuth.getCurrentUser().getUid());
+        database = FirebaseDatabase.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+
+        rsvp = database.getReference().child("Confirm").child(mAuth.getCurrentUser().getUid());
         rsvp.keepSynced(true);
         rsvp.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
-                    eventsAttending= new ArrayList<>();
+                    thoseAttendingEvents= new ArrayList<>();
                     for (DataSnapshot event: dataSnapshot.getChildren()) {
-                        eventsAttending.add(event.getValue().toString());
+                        thoseAttendingEvents.add(event.getValue().toString());
                     }
                 }
-                if (eventsAttending != null && eventsAttending.contains(id)) {
+                if (thoseAttendingEvents.contains(id) && thoseAttendingEvents != null) {
                     check = true;
                 }
                 if (check) {
@@ -98,60 +99,54 @@ public class EventLogistics extends AppCompatActivity {
             public void onClick(View v) {
                 if (!checkBox.isChecked()) {
                     numberAttending = String.valueOf(Integer.parseInt(numberAttending) - 1);
-                    number.setText("# RSVP: " + numberAttending);
-                    eventsAttending.remove(id);
+                    number.setText("Confirm: " + numberAttending);
+                    thoseAttendingEvents.remove(id);
                     refEvents.child("numberInterested").setValue(Integer.valueOf(numberAttending));
-                    rsvp.setValue(eventsAttending);
+                    rsvp.setValue(thoseAttendingEvents);
                 } else {
 
                     numberAttending = String.valueOf(Integer.parseInt(numberAttending) + 1);
-                    number.setText("# RSVP: " + numberAttending);
-                    eventsAttending.add(id);
+                    number.setText("Confirm: " + numberAttending);
+                    thoseAttendingEvents.add(id);
                     refEvents.child("numberInterested").setValue(Integer.valueOf(numberAttending));
-                    rsvp.setValue(eventsAttending);
+                    rsvp.setValue(thoseAttendingEvents);
                 }
             }});
-
-
-//        if (eventsAttending.contains(id)) {
-//            check = true;
-//        }
-
 
         refEvents = database.getReference("events").child(id);
         refEvents.keepSynced(true);
         refEvents.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                eventName = dataSnapshot.child("eventName").getValue().toString();
-                eventDescription = dataSnapshot.child("eventDescription").getValue().toString();
-                eventDate = dataSnapshot.child("date").getValue().toString();
-                imageURL = dataSnapshot.child("imageURL").getValue().toString();
-                numberAttending = dataSnapshot.child("numberInterested").getValue().toString();
+            public void onDataChange(@NonNull DataSnapshot dataSnap) {
+                imageURL = dataSnap.child("imageURL").getValue().toString();
+                numberAttending = dataSnap.child("numberInterested").getValue().toString();
+                eventName = dataSnap.child("eventName").getValue().toString();
+                eventDate = dataSnap.child("date").getValue().toString();
+                eventDescription = dataSnap.child("eventDescription").getValue().toString();
                 name.setText(eventName);
                 date.setText(eventDate);
-                number.setText("# RSVP: " + numberAttending);
+                number.setText("Confirm: " + numberAttending);
                 description.setText(eventDescription);
                 Glide.with(imageView.getContext()).load(imageURL).centerCrop().into(imageView);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.d("TAG", "Couldn't retrieve event");
+                Log.d("TAG", "Nah.");
             }
         });
+
         refEvents.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                numberAttending = dataSnapshot.child("numberInterested").getValue().toString();
-                number.setText("# RSVP: " +numberAttending);
+                numberAttending = dataSnapshot.child("ThoseInterested").getValue().toString();
+                number.setText("Confirm: " +numberAttending);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                // do nothing
             }
         });
-        System.out.println(eventsAttending);
     }
 }

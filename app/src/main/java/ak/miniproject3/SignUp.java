@@ -23,7 +23,7 @@ public class SignUp extends AppCompatActivity {
     private EditText password;
     private EditText email;
     private TextView login;
-    private EditText password2;
+    private EditText passwordConfirm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,14 +32,14 @@ public class SignUp extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         final Button signup = findViewById(R.id.signUp);
         password = findViewById(R.id.yourPassword);
-        password2 = findViewById(R.id.yourPasswordAgain);
+        passwordConfirm = findViewById(R.id.yourPasswordAgain);
         email = findViewById(R.id.yourEmail);
         mDatabase = FirebaseDatabase.getInstance().getReference();
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String pass = password.getText().toString();
-                String pass2 = password2.getText().toString();
+                String pass2 = passwordConfirm.getText().toString();
                 signUp(email.getText().toString(), password.getText().toString());
             }
         });

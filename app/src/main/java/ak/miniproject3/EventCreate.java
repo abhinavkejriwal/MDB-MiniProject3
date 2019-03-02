@@ -43,16 +43,16 @@ import java.util.Map;
 
 public class EventCreate extends AppCompatActivity implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
     private FirebaseAuth mAuth;
-    private DatabaseReference mRef;
-    private DatabaseReference userRef;
-    private StorageReference imagesRef;
-    private FirebaseUser currentUser;
     private EditText title;
     private EditText description;
     private ImageView image;
     private Uri downloadUrl;
     private Button submit;
     private Button date;
+    private DatabaseReference mRef;
+    private DatabaseReference userRef;
+    private StorageReference imagesRef;
+    private FirebaseUser currentUser;
     private boolean dateSelected = false;
     private int month = -1;
     private int day = -1;
@@ -72,16 +72,14 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
                 startActivityForResult(
                         new Intent(
                                 Intent.ACTION_PICK,
-                                android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI
-                        ),
-                        1
-                );
+                                android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI),
+                        1);
             }
         });
-        mRef = FirebaseDatabase.getInstance().getReference("events");
-        userRef = FirebaseDatabase.getInstance().getReference("rsvp");
+        mRef = FirebaseDatabase.getInstance().getReference("Events");
+        userRef = FirebaseDatabase.getInstance().getReference("Confirm");
         mAuth = FirebaseAuth.getInstance();
-        imagesRef = FirebaseStorage.getInstance().getReference("images");
+        imagesRef = FirebaseStorage.getInstance().getReference("Pictures");
         date = findViewById(R.id.setDate);
         date.setOnClickListener(this);
 
@@ -91,13 +89,7 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
             @Override
             public void onClick(View v) {
                 if (title.getText().toString().isEmpty()) {
-                    Toast.makeText(EventCreate.this, "Event Name is empty", Toast.LENGTH_LONG).show();
-                } else if (description.getText().toString().isEmpty()) {
-                    Toast.makeText(EventCreate.this, "Event Description is empty", Toast.LENGTH_LONG).show();
-                } else if (!dateSelected) {
-                    Toast.makeText(EventCreate.this, "Date isn't set properly", Toast.LENGTH_LONG).show();
-                } else if (!imageSet) {
-                    Toast.makeText(EventCreate.this, "Image isn't set", Toast.LENGTH_LONG).show();
+                    Toast.makeText(EventCreate.this, "What's the name", Toast.LENGTH_LONG).show();
                 } else {
                     upload();
                 }
@@ -107,25 +99,6 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
 
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == Activity.RESULT_OK) {
-            Uri selectedImage = data.getData();
-            Bitmap bitmap;
-            try {
-                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
-                image.setImageBitmap(bitmap);
-                imageSet = true;
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-    }
     @Override
     public void onClick(View v) {
         switch(v.getId()){
@@ -144,14 +117,34 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
         }
     }
 
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == 1) {
+            Uri selectedImage = data.getData();
+            Bitmap bitmap;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+                image.setImageBitmap(bitmap);
+                imageSet = true;
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+
     private void upload() {
         final String eventName = title.getText().toString();
         final String eventDescription = description.getText().toString();
         final String userEmail = currentUser.getEmail();
         final String userID =  currentUser.getUid();
         final String eventID = mRef.push().getKey();
-        final String rsvpID = userRef.push().getKey();
-        Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
+        Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG,100, baos);
         byte[] data = baos.toByteArray();
@@ -159,12 +152,12 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(EventCreate.this, "Couldn't upload image", Toast.LENGTH_LONG).show();
+                Toast.makeText(EventCreate.this, "Unable to upload", Toast.LENGTH_LONG).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
+                //do nothing.
             }
         });
         final Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
@@ -183,28 +176,28 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
                     downloadUrl = Task.getResult();
                     Date current = new Date();
                     int rsvp = 1;
-                    String lel;
+                    String confirm;
                     if (month < 10) {
                         if (day < 10) {
-                            lel = "0" + month +"/0"+day +  "/" + year;
+                            confirm = "0" + month +"/0"+day +  "/" + year;
                         } else {
-                            lel = "0" + month+"/" +day + "/" + year;
+                            confirm = "0" + month+"/" +day + "/" + year;
                         }
                     } else {
                         if (day < 10) {
-                            lel = month + "/" + "0" + day + "/" + year;
+                            confirm = month + "/" + "0" + day + "/" + year;
                         } else {
-                            lel = month+"/" + day + "/" + year;
+                            confirm = month+"/" + day + "/" + year;
                         }
                     }
-                    Event event = new Event(eventID, userEmail, downloadUrl.toString(), eventName, rsvp, eventDescription, lel, current.getTime());
+                    Event event = new Event(eventID, userEmail, downloadUrl.toString(), eventName, rsvp, eventDescription, confirm, current.getTime());
                     mRef.child(eventID).setValue(event);
                     ArrayList<String> users = new ArrayList<>();
                     users.add(eventID);
                     userRef.child(userID).setValue(users);
                     startActivity(new Intent(EventCreate.this, EventsDisplay.class));
                 } else {
-                    Toast.makeText(EventCreate.this, "Image couldn't be uploaded", Toast.LENGTH_LONG).show();
+                    Toast.makeText(EventCreate.this, "Not uploaded", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -225,8 +218,8 @@ public class EventCreate extends AppCompatActivity implements View.OnClickListen
         Map<String, Object> childUpdates = new HashMap<>();
         childUpdates.put("/events/" + key, eventValues);
         mRef.updateChildren(childUpdates);
-
     }
+
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         String date = Integer.toString(month + 1) + "/" + Integer.toString(dayOfMonth) + "/" + Integer.toString(year);

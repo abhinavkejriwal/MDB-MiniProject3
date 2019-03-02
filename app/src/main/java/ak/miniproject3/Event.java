@@ -6,10 +6,7 @@ public class Event {
     public String imageURL;
     public String eventName;
     public String eventDescription;
-    public int numberInterested;
-    public int day;
-    public int month;
-    public int year;
+    public int numberOfPeopleInterested;
     public long time;
     public String date;
     public Event() {
@@ -22,7 +19,7 @@ public class Event {
         this.email = email;
         this.imageURL = imageURL;
         this.eventName = eventName;
-        this.numberInterested = numberInterested;
+        this.numberOfPeopleInterested = numberInterested;
         this.time = time;
         this.eventDescription = eventDescription;
         this.date = date;
@@ -35,6 +32,7 @@ public class Event {
     public String getId() {
         return id;
     }
+
     public String getEmail() {
         return email;
 
@@ -49,11 +47,11 @@ public class Event {
     }
 
     public int getNumberInterested() {
-        return numberInterested;
+        return numberOfPeopleInterested;
     }
 
     public void updateInterested() {
-        numberInterested += 1;
+        numberOfPeopleInterested += 1;
     }
     public String getEventDescription() {
         return eventDescription;

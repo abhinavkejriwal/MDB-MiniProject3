@@ -51,8 +51,6 @@ public class EventsDisplay extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-
-
         FirebaseUser currUser = mAuth.getCurrentUser();
 
         fABcreate = findViewById(R.id.fAB);
